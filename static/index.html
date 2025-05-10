@@ -85,7 +85,7 @@
                 <a href="#roadmap" class="nav-link text-dfmBlue hover:text-dfmLightBlue">Roadmap</a>
                 <a href="#contribute" class="nav-link text-dfmBlue hover:text-dfmLightBlue">Contribute</a>
                 <a href="#contact" class="nav-link text-dfmBlue hover:text-dfmLightBlue">Contact</a>
-                <a href="#" id="admin-login-link" class="nav-link text-gray-300 hover:text-dfmLightBlue">(Admin)</a>
+                <a href="#" id="admin-login-link" class="nav-link text-gray-300 hover:text-dfmLightBlue">[Admin]</a>
             </div>
             <button class="md:hidden focus:outline-none" id="mobile-menu-button">
                 <i class="fas fa-bars text-2xl text-dfmBlue"></i>
@@ -633,47 +633,149 @@
             }
         });
 
+        function sanitizeHTML(input) {
+            const template = document.createElement('template');
+            template.innerHTML = input;
+            const allowedTags = ['br', 'b', 'i', 'em', 'strong', 'a', 'ul', 'ol', 'li', 'p'];
+            const walker = document.createTreeWalker(template.content, NodeFilter.SHOW_ELEMENT, {
+                acceptNode: (node) => allowedTags.includes(node.nodeName.toLowerCase()) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT
+            });
+
+            let node;
+            while (node = walker.nextNode()) {
+                [...node.attributes].forEach(attr => {
+                    if (node.nodeName.toLowerCase() === 'a' && attr.name === 'href') return;
+                    node.removeAttribute(attr.name);
+                });
+            }
+
+            return template.innerHTML;
+        }
+
+        function truncateHTML(html, maxChars = 140) {
+            const template = document.createElement('template');
+            template.innerHTML = html;
+
+            let count = 0;
+            const output = document.createElement('div');
+
+            function traverse(node, parent) {
+                if (count >= maxChars) return;
+
+                if (node.nodeType === Node.TEXT_NODE) {
+                    const remaining = maxChars - count;
+                    const text = node.textContent.slice(0, remaining);
+                    count += text.length;
+                    parent.appendChild(document.createTextNode(text));
+                } else if (node.nodeType === Node.ELEMENT_NODE) {
+                    const clone = document.createElement(node.tagName);
+                    for (const attr of node.attributes) {
+                        if (node.tagName === 'A' && attr.name === 'href') {
+                            clone.setAttribute(attr.name, attr.value);
+                        }
+                    }
+                    parent.appendChild(clone);
+                    for (const child of node.childNodes) {
+                        traverse(child, clone);
+                        if (count >= maxChars) break;
+                    }
+                }
+            }
+
+            for (const child of template.content.childNodes) {
+                traverse(child, output);
+                if (count >= maxChars) break;
+            }
+
+            // Add inline ellipsis to last text node or inline element
+            const span = document.createElement('span');
+            span.textContent = '...';
+            output.lastElementChild?.appendChild(span) || output.appendChild(span);
+
+            return output.innerHTML;
+        }
+
         function displayNews(newsData) {
             newsContainer.innerHTML = '';
             newsData.forEach((news) => {
                 const newsItem = document.createElement('div');
                 newsItem.className = 'news-item bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg relative';
+
                 const deleteBtnHTML = authToken && news.id
                     ? `<button
-                            class="delete-news absolute top-2 right-2 w-6 h-6 rounded-full bg-red-100 hover:bg-red-200 text-red-600 hover:text-red-800 flex items-center justify-center text-lg font-bold"
-                            data-id="${news.id}"
-                            title="Delete News"
-                        >
-                            &times;
-                        </button>`
+                    class="delete-news absolute top-2 right-2 w-6 h-6 rounded-full bg-red-100 hover:bg-red-200 text-red-600 hover:text-red-800 flex items-center justify-center text-lg font-bold"
+                    data-id="${news.id}"
+                    title="Delete News">&times;</button>`
                     : '';
+
                 const editBtnHTML = authToken && news.id
                     ? `<button class="edit-news absolute top-10 right-2 w-6 h-6 rounded-full bg-yellow-100 hover:bg-yellow-200 text-yellow-600 hover:text-yellow-800 flex items-center justify-center text-lg font-bold"
-                            data-id="${news.id}" 
-                            data-title="${encodeURIComponent(news.title)}"
-                            data-date="${news.date}"
-                            data-content="${encodeURIComponent(news.content)}"
-                            title="Edit News">
-                        ✎
-                    </button>`
+                    data-id="${news.id}" 
+                    data-title="${encodeURIComponent(news.title)}"
+                    data-date="${news.date}"
+                    data-content="${encodeURIComponent(news.content)}"
+                    title="Edit News">✎</button>`
                     : '';
+
+                const rawContent = news.content;
+                const fullSanitized = sanitizeHTML(rawContent);
+                const plainTextLength = rawContent.replace(/<[^>]*>/g, '').length;
+                const isLong = plainTextLength > 140;
+                const truncatedSanitized = isLong
+                    ? truncateHTML(fullSanitized, 140)
+                    : fullSanitized;
+
                 newsItem.innerHTML = `
-                    ${deleteBtnHTML}
-                    ${editBtnHTML}
-                    <div class="p-6">
-                        <div class="flex justify-between items-start mb-2">
-                            <h3 class="text-xl font-bold text-dfmBlue">${news.title}</h3>
-                            <span class="text-sm text-gray-500">${formatDate(news.date)}</span>
-                        </div>
-                        <p class="text-gray-700 mb-4">${news.content}</p>
-                        <button class="text-dfmTeal hover:text-dfmBlue font-medium read-more-btn" data-content="${encodeURIComponent(news.content)}">
-                            Read more <i class="fas fa-arrow-right ml-1"></i>
-                        </button>
+            ${deleteBtnHTML}
+            ${editBtnHTML}
+            <div class="p-6">
+                <div class="flex justify-between items-start mb-2">
+                    <h3 class="text-xl font-bold text-dfmBlue">${news.title}</h3>
+                    <span class="text-sm text-gray-500">${formatDate(news.date)}</span>
+                </div>
+                <div class="relative">
+                    <div class="content-wrapper"
+                        data-full="${encodeURIComponent(fullSanitized)}"
+                        data-truncated="${encodeURIComponent(truncatedSanitized)}"
+                        data-expanded="false">
+                        <div class="text-gray-700 content-text">${truncatedSanitized}</div>
                     </div>
-                `;
+                    ${isLong ? `<button class="mt-2 text-dfmTeal hover:text-dfmBlue font-medium toggle-content-btn">Read more</button>` : ''}
+                </div>
+            </div>
+        `;
                 newsContainer.appendChild(newsItem);
             });
         }
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.classList.contains('toggle-content-btn')) return;
+
+            const btn = e.target;
+            const wrapper = btn.closest('.relative').querySelector('.content-wrapper');
+            const contentBox = wrapper.querySelector('.content-text');
+            const card = btn.closest('.news-item');
+
+            const isExpanded = wrapper.dataset.expanded === 'true';
+            const fullHTML = decodeURIComponent(wrapper.dataset.full);
+            const truncatedHTML = decodeURIComponent(wrapper.dataset.truncated);
+
+            // Just replace the innerHTML — no duplication
+            contentBox.innerHTML = isExpanded ? truncatedHTML : fullHTML;
+
+            // Update toggle button
+            btn.textContent = isExpanded ? 'Read more' : 'Read less';
+            wrapper.dataset.expanded = (!isExpanded).toString();
+
+            // Scroll into view when collapsing
+            if (isExpanded) {
+                const cardTop = card.getBoundingClientRect().top;
+                const navOffset = 100;
+                if (cardTop < navOffset) {
+                    card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }
+        });
 
         document.getElementById('admin-login-link').addEventListener('click', (e) => {
             e.preventDefault();
