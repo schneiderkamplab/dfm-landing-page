@@ -919,6 +919,18 @@
 
             loginLink.addEventListener('click', (e) => {
                 e.preventDefault();
+
+                if (loginLabel.textContent === '[Logout]') {
+                    // Perform logout
+                    authToken = '';
+                    loginLabel.textContent = '[Admin]';
+                    alert('Logged out successfully.');
+                    fetchNews();
+                    addNewsBtn.classList.add('hidden');
+                    return;
+                }
+
+                // Show login form if not logged in
                 loginBox.classList.toggle('hidden');
                 loginError.classList.add('hidden');
                 loginInput.value = '';
@@ -942,7 +954,7 @@
                         addNewsBtn.classList.remove('hidden');
                         loginBox.classList.add('hidden');
                         loginError.classList.add('hidden');
-                        loginLabel.textContent = '[Logged in]';
+                        loginLabel.textContent = '[Logout]';
                         fetchNews();
                         alert('Login successful.');
                     } else {
