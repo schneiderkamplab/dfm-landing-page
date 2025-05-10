@@ -85,7 +85,21 @@
                 <a href="#roadmap" class="nav-link text-dfmBlue hover:text-dfmLightBlue">Roadmap</a>
                 <a href="#contribute" class="nav-link text-dfmBlue hover:text-dfmLightBlue">Contribute</a>
                 <a href="#contact" class="nav-link text-dfmBlue hover:text-dfmLightBlue">Contact</a>
-                <a href="#" id="admin-login-link" class="nav-link text-gray-300 hover:text-dfmLightBlue">[Admin]</a>
+                <div class="relative">
+                    <a href="#" id="admin-login-link" class="nav-link text-gray-300 hover:text-dfmLightBlue">
+                        <span id="admin-login-label">[Admin]</span>
+                    </a>
+                    <div id="admin-login-box"
+                        class="absolute top-full mt-2 right-0 bg-white shadow-lg border border-gray-200 rounded-lg p-4 hidden z-50 w-64">
+                        <input type="password" id="admin-password" placeholder="Enter password"
+                            class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-dfmTeal text-sm mb-2">
+                        <button id="admin-login-submit"
+                            class="w-full bg-dfmTeal hover:bg-dfmBlue text-white font-semibold py-1.5 px-4 rounded-md text-sm">
+                            Login
+                        </button>
+                        <p id="admin-login-error" class="text-red-600 text-sm mt-2 hidden"></p>
+                    </div>
+                </div>
             </div>
             <button class="md:hidden focus:outline-none" id="mobile-menu-button">
                 <i class="fas fa-bars text-2xl text-dfmBlue"></i>
@@ -549,24 +563,6 @@
     <script>
         let authToken = '';
 
-        async function login() {
-            const password = prompt('Enter admin password:');
-            const res = await fetch('/api/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ password })
-            });
-            const data = await res.json();
-            if (res.ok) {
-                authToken = data.token;
-                alert('Login successful.');
-                addNewsBtn.classList.remove('hidden');
-                fetchNews();
-            } else {
-                alert('Login failed: ' + data.error);
-            }
-        }
-
         const API_URL = '/api/news';
 
         const newsContainer = document.getElementById('news-container');
@@ -777,15 +773,6 @@
             }
         });
 
-        document.getElementById('admin-login-link').addEventListener('click', (e) => {
-            e.preventDefault();
-            if (!authToken) {
-                login();
-            } else {
-                addNewsBtn.classList.toggle('hidden');
-            }
-        });
-
         addNewsBtn.addEventListener('click', () => {
             if (!authToken) {
                 login();
@@ -920,6 +907,74 @@
                 console.error(e);
                 alert('An error occurred. Please try again later.');
             }
+        });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const loginBox = document.getElementById('admin-login-box');
+            const loginLink = document.getElementById('admin-login-link');
+            const loginBtn = document.getElementById('admin-login-submit');
+            const loginInput = document.getElementById('admin-password');
+            const loginError = document.getElementById('admin-login-error');
+            const loginLabel = document.getElementById('admin-login-label');
+
+            loginLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                loginBox.classList.toggle('hidden');
+                loginError.classList.add('hidden');
+                loginInput.value = '';
+                loginInput.focus();
+            });
+
+            async function handleLogin() {
+                const password = loginInput.value.trim();
+                if (!password) return;
+
+                try {
+                    const res = await fetch('/api/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ password })
+                    });
+
+                    const data = await res.json();
+                    if (res.ok) {
+                        authToken = data.token;
+                        addNewsBtn.classList.remove('hidden');
+                        loginBox.classList.add('hidden');
+                        loginError.classList.add('hidden');
+                        loginLabel.textContent = '[Logged in]';
+                        fetchNews();
+                        alert('Login successful.');
+                    } else {
+                        loginError.textContent = data.error || 'Invalid password.';
+                        loginError.classList.remove('hidden');
+                        loginInput.focus();
+                    }
+                } catch (err) {
+                    loginError.textContent = 'Network error.';
+                    loginError.classList.remove('hidden');
+                    loginInput.focus();
+                }
+            }
+
+            loginBtn.addEventListener('click', handleLogin);
+
+            loginInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleLogin();
+                }
+            });
+
+            document.addEventListener('click', (e) => {
+                if (
+                    !loginBox.contains(e.target) &&
+                    e.target !== loginLink &&
+                    !loginLink.contains(e.target)
+                ) {
+                    loginBox.classList.add('hidden');
+                }
+            });
         });
     </script>
 
