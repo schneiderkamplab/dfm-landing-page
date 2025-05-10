@@ -85,6 +85,7 @@
                 <a href="#roadmap" class="nav-link text-dfmBlue hover:text-dfmLightBlue">Roadmap</a>
                 <a href="#contribute" class="nav-link text-dfmBlue hover:text-dfmLightBlue">Contribute</a>
                 <a href="#contact" class="nav-link text-dfmBlue hover:text-dfmLightBlue">Contact</a>
+                <a href="#" id="admin-login-link" class="nav-link text-dfmBlue hover:text-dfmLightBlue">Admin</a>
             </div>
             <button class="md:hidden focus:outline-none" id="mobile-menu-button">
                 <i class="fas fa-bars text-2xl text-dfmBlue"></i>
@@ -152,8 +153,9 @@
                             rel="noopener">Center for Humanities Computing</a>, Aarhus University
                     </li>
                     <li>
-                        <a href="https://www.sdu.dk/en/forskning/machine-learning" class="text-dfmBlue hover:underline" target="_blank"
-                            rel="noopener">Center for Machine Learning</a>, University of Southern Denmark
+                        <a href="https://www.sdu.dk/en/forskning/machine-learning" class="text-dfmBlue hover:underline"
+                            target="_blank" rel="noopener">Center for Machine Learning</a>, University of Southern
+                        Denmark
                     </li>
                     <li>
                         <a href="https://alexandra.dk/" class="text-dfmBlue hover:underline" target="_blank"
@@ -207,7 +209,7 @@
 
             <div class="mt-12 text-center">
                 <button id="add-news-btn"
-                    class="bg-dfmLightBlue hover:bg-dfmBlue text-white font-bold py-3 px-6 rounded-full transition duration-300">
+                    class="hidden bg-dfmLightBlue hover:bg-dfmBlue text-white font-bold py-3 px-6 rounded-full transition duration-300">
                     Add News Item (Admin)
                 </button>
 
@@ -355,7 +357,8 @@
                     <p class="mb-6">Contribute Danish language datasets or help curate existing data. High-quality,
                         diverse datasets are crucial for model performance.</p>
                     <a href="https://alexandra.dk/dsk/"
-                        class="inline-block bg-white text-dfmBlue font-bold py-2 px-4 rounded hover:bg-gray-100 transition">Dansk Sprogmodel Konsortium</a>
+                        class="inline-block bg-white text-dfmBlue font-bold py-2 px-4 rounded hover:bg-gray-100 transition">Dansk
+                        Sprogmodel Konsortium</a>
                 </div>
 
                 <div
@@ -558,7 +561,7 @@
             if (res.ok) {
                 authToken = data.token;
                 alert('Login successful.');
-                newsForm.classList.remove('hidden');
+                addNewsBtn.classList.remove('hidden');
             } else {
                 alert('Login failed: ' + data.error);
             }
@@ -607,6 +610,15 @@
                 newsContainer.appendChild(newsItem);
             });
         }
+
+        document.getElementById('admin-login-link').addEventListener('click', (e) => {
+            e.preventDefault();
+            if (!authToken) {
+                login();
+            } else {
+                addNewsBtn.classList.toggle('hidden');
+            }
+        });
 
         addNewsBtn.addEventListener('click', () => {
             if (!authToken) {

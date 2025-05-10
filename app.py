@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from flask import Flask, request, jsonify, send_from_directory
 from flask_mail import Mail, Message
 import json
@@ -19,7 +19,7 @@ app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_DEFAULT_SENDER', app.config[
 app.config['MAIL_RECIPIENT'] = os.getenv('MAIL_RECIPIENT', app.config['MAIL_USERNAME'])
 mail = Mail(app)
 
-TOKENS = set()
+TOKENS = {}
 
 def load_news():
     if not os.path.exists(app.config['NEWS_FILE']):
@@ -39,7 +39,9 @@ def get_news():
 def post_news():
     auth = request.headers.get('Authorization', '')
     token = auth.replace('Bearer ', '')
-    if token not in TOKENS:
+    token_expiry = TOKENS.get(token, None)
+    if not token_expiry or datetime.now(UTC) > token_expiry:
+        TOKENS.pop(token, None)
         return jsonify({'error': 'Unauthorized'}), 401
 
     data = request.json
@@ -61,7 +63,7 @@ def login():
     password = data.get('password')
     if password == app.config['ADMIN_PASSWORD']:
         token = str(uuid.uuid4())
-        TOKENS.add(token)
+        TOKENS[token] = datetime.now(UTC) + timedelta(hours=1)
         return jsonify({'token': token})
     return jsonify({'error': 'Invalid password'}), 403
 
