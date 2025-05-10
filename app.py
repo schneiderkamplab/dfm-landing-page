@@ -43,19 +43,64 @@ def post_news():
     if not token_expiry or datetime.now(UTC) > token_expiry:
         TOKENS.pop(token, None)
         return jsonify({'error': 'Unauthorized'}), 401
-
     data = request.json
     item = {
+        'id': str(uuid.uuid4()),
         'title': data.get('title', '').strip(),
         'date': data.get('date', '').strip(),
         'content': data.get('content', '').strip()
     }
-
     if not item['title'] or not item['date'] or not item['content']:
         return jsonify({'error': 'Missing fields'}), 400
-
     save_news(item)
     return jsonify(item), 201
+
+@app.route('/api/news/<news_id>', methods=['DELETE'])
+def delete_news(news_id):
+    auth = request.headers.get('Authorization', '')
+    token = auth.replace('Bearer ', '')
+    token_expiry = TOKENS.get(token, None)
+    if not token_expiry or datetime.now(UTC) > token_expiry:
+        TOKENS.pop(token, None)
+        return jsonify({'error': 'Unauthorized'}), 401
+    news_items = load_news()
+    updated_news = [item for item in news_items if item.get('id') != news_id]
+    if len(news_items) == len(updated_news):
+        return jsonify({'error': 'News item not found'}), 404
+    with open(app.config['NEWS_FILE'], 'w') as f:
+        for item in updated_news:
+            f.write(json.dumps(item) + '\n')
+    return jsonify({'success': True})
+
+@app.route('/api/news/<news_id>', methods=['PUT'])
+def update_news(news_id):
+    auth = request.headers.get('Authorization', '')
+    token = auth.replace('Bearer ', '')
+    token_expiry = TOKENS.get(token, None)
+    if not token_expiry or datetime.now(UTC) > token_expiry:
+        TOKENS.pop(token, None)
+        return jsonify({'error': 'Unauthorized'}), 401
+    data = request.json
+    title = data.get('title', '').strip()
+    date = data.get('date', '').strip()
+    content = data.get('content', '').strip()
+    if not title or not date or not content:
+        return jsonify({'error': 'Missing fields'}), 400
+    news_items = load_news()
+    updated = False
+    for item in news_items:
+        if item.get('id') == news_id:
+            item['title'] = title
+            item['date'] = date
+            item['content'] = content
+            updated = True
+            break
+    if not updated:
+        return jsonify({'error': 'News item not found'}), 404
+    with open(app.config['NEWS_FILE'], 'w') as f:
+        for item in news_items:
+            f.write(json.dumps(item) + '\n')
+    return jsonify({'success': True})
 
 @app.route('/api/login', methods=['POST'])
 def login():
@@ -74,12 +119,9 @@ def contact():
     email = data.get('email', '').strip()
     subject = data.get('subject', '').strip()
     message = data.get('message', '').strip()
-
     if not name or not email or not subject or not message:
         return jsonify({'error': 'All fields are required.'}), 400
-
     timestamp = datetime.now(UTC).isoformat()
-
     entry = {
         "name": name,
         "email": email,
@@ -87,14 +129,10 @@ def contact():
         "message": message,
         "timestamp": timestamp
     }
-
-    # Store in contact.jsonl
     with open(app.config['CONTACT_FILE'], 'a') as f:
         f.write(json.dumps(entry) + '\n')
-
-    # Send email
     try:
-        msg = Message(subject=f"Contact Form: {subject}",
+        msg = Message(subject=f"[DFM] Contact: {subject}",
                       sender=app.config['MAIL_DEFAULT_SENDER'],
                       recipients=[app.config['MAIL_RECIPIENT']])
         msg.body = f"""
@@ -111,7 +149,6 @@ Timestamp: {timestamp}
         mail.send(msg)
     except Exception as e:
         return jsonify({'error': f'Failed to send email: {str(e)}'}), 500
-
     return jsonify({'success': True, 'message': 'Message received and email sent.'}), 200
 
 @app.route('/api/newsletter', methods=['POST'])
@@ -120,13 +157,10 @@ def newsletter():
     email = data.get('email', '').strip()
     consent = data.get('consent', False)
     timestamp = datetime.now(UTC).isoformat()
-
     if not email:
         return jsonify({'error': 'Email is required.'}), 400
     if not consent:
         return jsonify({'error': 'You must provide GDPR consent to subscribe.'}), 400
-
-    # Store subscription
     entry = {
         "email": email,
         "consent": True,
@@ -134,17 +168,19 @@ def newsletter():
     }
     with open(app.config['NEWSLETTER_FILE'], 'a') as f:
         f.write(json.dumps(entry) + '\n')
-
-    # Send email to admin
     try:
-        msg = Message(subject="New Newsletter Signup (GDPR)",
+        msg = Message(subject=f"[DFM] Newsletter: signup {email}",
                       sender=app.config['MAIL_DEFAULT_SENDER'],
                       recipients=[app.config['MAIL_RECIPIENT']])
-        msg.body = f"New GDPR-compliant newsletter signup:\n\nEmail: {email}\nTime: {timestamp}\nConsent: Yes"
+        msg.body = f"""
+New newsletter signup:
+Email: {email}
+Timestamp: {timestamp}
+GDPR Consent: Yes
+"""
         mail.send(msg)
     except Exception as e:
         return jsonify({'error': f'Failed to send email: {str(e)}'}), 500
-
     return jsonify({'success': True, 'message': 'Subscription successful with GDPR consent.'}), 200
 
 @app.route('/privacy-policy')
@@ -157,7 +193,6 @@ def index():
 
 @app.route('/<path:path>')
 def static_proxy(path):
-    # Serve static files from the static folder
     return send_from_directory(app.static_folder, path)
 
 if __name__ == '__main__':

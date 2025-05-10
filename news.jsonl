@@ -1,3 +1,4 @@
-{"title": "Test news", "date": "2025-05-25", "content": "Something awesome happened just now!"}
-{"title": "Another day", "date": "2025-05-25", "content": "Another news"}
-{"title": "Hello!", "date": "2025-05-27", "content": "now!"}
+{"id": "test-1", "title": "Test news", "date": "2025-05-25", "content": "Something awesome happened just now!"}
+{"id": "test-2", "title": "Another day", "date": "2025-05-25", "content": "Another news"}
+{"id": "c22df560-d072-41db-83f2-f3ad9c0620c4", "title": "Hello", "date": "2025-05-28", "content": "Let's go again!"}
+{"id": "06a3d1cd-bf72-48bc-9758-9998d49c72bd", "title": "Hello World!", "date": "2025-05-28", "content": "This is yet another fine DFM model, don't ya think?"}
