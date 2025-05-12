@@ -149,36 +149,47 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderRoadmapItems(items) {
-        const container = document.getElementById('roadmap-container');
-        if (!container) return; // Prevents crash
-        container.innerHTML = ''; // Clear existing content
+        roadmapContainer.innerHTML = '';
+
+        const statusColorMap = {
+            'Completed': 'bg-dfmGreen',
+            'In Progress': 'bg-yellow-500',
+            'Planned': 'bg-dfmBlue'
+        };
 
         items.forEach(item => {
-            const statusColorMap = {
-                'Completed': 'bg-dfmGreen',
-                'In Progress': 'bg-yellow-500',
-                'Planned': 'bg-dfmBlue'
-            };
-
             const statusBadge = item.status
                 ? `<span class="inline-block ${statusColorMap[item.status] || 'bg-gray-300'} text-white text-xs px-2 py-1 rounded mr-2">${item.status}</span>`
                 : '';
+            const adminButtons = authToken ? `
+                <div class="absolute top-2 right-2 flex flex-col space-y-2 items-end">
+                    <button class="delete-roadmap w-6 h-6 rounded-full bg-red-100 hover:bg-red-200 text-red-600 hover:text-red-800 flex items-center justify-center text-lg font-bold"
+                        title="Delete" data-id="${item.id}">&times;</button>
+                    <button class="edit-roadmap w-6 h-6 rounded-full bg-yellow-100 hover:bg-yellow-200 text-yellow-600 hover:text-yellow-800 flex items-center justify-center text-lg font-bold"
+                        title="Edit"
+                        data-id="${item.id}"
+                        data-title="${encodeURIComponent(item.title)}"
+                        data-quarter="${encodeURIComponent(item.quarter)}"
+                        data-description="${encodeURIComponent(item.description)}"
+                        data-status="${item.status || ''}">
+                        ✎
+                    </button>
+                </div>
+            ` : '';
 
             const itemHTML = `
-            <div class="roadmap-item relative pl-10">
-                <div class="absolute -left-3 top-0 w-6 h-6 rounded-full bg-dfmTeal border-4 border-white"></div>
-                <div class="bg-gray-100 p-6 rounded-lg shadow">
-                    <div class="flex justify-between items-center mb-2">
-                        <h3 class="text-xl font-bold text-dfmBlue">${item.title}</h3>
-                        <span class="bg-dfmBlue text-white text-sm px-3 py-1 rounded-full">${item.quarter}</span>
-                    </div>
-                    <p class="text-gray-700">${item.description}</p>
-                    <div class="mt-4">${statusBadge}</div>
+            <div class="roadmap-item relative pl-10 bg-gray-100 p-6 rounded-lg shadow mb-6">
+                ${adminButtons}
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="text-xl font-bold text-dfmBlue">${item.title}</h3>
+                    <span class="bg-dfmBlue text-white text-sm px-3 py-1 rounded-full">${item.quarter}</span>
                 </div>
+                <p class="text-gray-700">${item.description}</p>
+                <div class="mt-4">${statusBadge}</div>
             </div>
         `;
 
-            container.insertAdjacentHTML('beforeend', itemHTML);
+            roadmapContainer.insertAdjacentHTML('beforeend', itemHTML);
         });
     }
 
@@ -394,7 +405,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /** ------------------- Authentication ------------------- */
 
-    const login = () => $('admin-login-box').classList.remove('hidden');
+    const login = () => {
+        $('admin-login-box').classList.remove('hidden');
+        setTimeout(() => $('admin-password').focus(), 0);
+    }
 
     const handleLogin = async () => {
         const password = $('admin-password').value.trim();
@@ -414,6 +428,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 addRoadmapBtn.classList.remove('hidden');
                 showNotification('Login successful', 'success');
                 fetchNews();
+                fetchRoadmapItems();
             } else {
                 $('admin-login-error').textContent = data.error;
                 $('admin-login-error').classList.remove('hidden');
@@ -434,6 +449,7 @@ document.addEventListener('DOMContentLoaded', () => {
             addRoadmapBtn.classList.add('hidden');
             showNotification('Logged out', 'success');
             fetchNews();
+            fetchRoadmapItems();
         } else {
             login();
         }
