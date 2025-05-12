@@ -10,6 +10,7 @@ app.config['NEWS_FILE'] = os.getenv('NEWS_FILE', 'data/news.jsonl')
 app.config['ADMIN_PASSWORD'] = os.getenv('ADMIN_PASSWORD', 'changeme')
 app.config['CONTACT_FILE'] = os.getenv('CONTACT_FILE', 'data/contact.jsonl')
 app.config['NEWSLETTER_FILE'] = os.getenv('NEWSLETTER_FILE', 'data/newsletter.jsonl')
+app.config['ROADMAP_FILE'] = os.getenv('ROADMAP_FILE', 'data/roadmap.jsonl')
 app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER', 'smtp.gmail.com')
 app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT', 587))
 app.config['MAIL_USE_TLS'] = True
@@ -100,6 +101,92 @@ def update_news(news_id):
     with open(app.config['NEWS_FILE'], 'w') as f:
         for item in news_items:
             f.write(json.dumps(item) + '\n')
+    return jsonify({'success': True})
+
+def load_roadmap():
+    if not os.path.exists(app.config['ROADMAP_FILE']):
+        return []
+    with open(app.config['ROADMAP_FILE']) as f:
+        return [json.loads(line) for line in f]
+
+def save_roadmap(items):
+    with open(app.config['ROADMAP_FILE'], 'w') as f:
+        for item in items:
+            f.write(json.dumps(item) + '\n')
+
+@app.route('/api/roadmap', methods=['GET'])
+def get_roadmap():
+    return jsonify(load_roadmap())
+
+@app.route('/api/roadmap', methods=['POST'])
+def post_roadmap():
+    auth = request.headers.get('Authorization', '')
+    token = auth.replace('Bearer ', '')
+    token_expiry = TOKENS.get(token)
+    if not token_expiry or datetime.now(UTC) > token_expiry:
+        TOKENS.pop(token, None)
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    data = request.json
+    item = {
+        'id': str(uuid.uuid4()),
+        'title': data.get('title', '').strip(),
+        'quarter': data.get('quarter', '').strip(),
+        'description': data.get('description', '').strip(),
+        'status': data.get('status', '').strip(),
+    }
+    if not item['title'] or not item['quarter'] or not item['description']:
+        return jsonify({'error': 'Missing required fields'}), 400
+
+    items = load_roadmap()
+    items.append(item)
+    save_roadmap(items)
+    return jsonify(item), 201
+
+@app.route('/api/roadmap/<roadmap_id>', methods=['PUT'])
+def update_roadmap(roadmap_id):
+    auth = request.headers.get('Authorization', '')
+    token = auth.replace('Bearer ', '')
+    token_expiry = TOKENS.get(token)
+    if not token_expiry or datetime.now(UTC) > token_expiry:
+        TOKENS.pop(token, None)
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    data = request.json
+    items = load_roadmap()
+    updated = False
+
+    for item in items:
+        if item.get('id') == roadmap_id:
+            item['title'] = data.get('title', '').strip()
+            item['quarter'] = data.get('quarter', '').strip()
+            item['description'] = data.get('description', '').strip()
+            item['status'] = data.get('status', '').strip()
+            updated = True
+            break
+
+    if not updated:
+        return jsonify({'error': 'Roadmap item not found'}), 404
+
+    save_roadmap(items)
+    return jsonify({'success': True})
+
+@app.route('/api/roadmap/<roadmap_id>', methods=['DELETE'])
+def delete_roadmap(roadmap_id):
+    auth = request.headers.get('Authorization', '')
+    token = auth.replace('Bearer ', '')
+    token_expiry = TOKENS.get(token)
+    if not token_expiry or datetime.now(UTC) > token_expiry:
+        TOKENS.pop(token, None)
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    items = load_roadmap()
+    updated_items = [item for item in items if item.get('id') != roadmap_id]
+
+    if len(updated_items) == len(items):
+        return jsonify({'error': 'Roadmap item not found'}), 404
+
+    save_roadmap(updated_items)
     return jsonify({'success': True})
 
 @app.route('/api/login', methods=['POST'])

@@ -130,6 +130,113 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    /** ------------------- Roadmap Logic ------------------- */
+
+    const roadmapContainer = document.getElementById('roadmap-container');
+    const addRoadmapBtn = document.getElementById('add-roadmap-btn');
+    const roadmapForm = document.getElementById('roadmap-form');
+    const roadmapItemForm = document.getElementById('roadmap-item-form');
+    const cancelRoadmap = document.getElementById('cancel-roadmap');
+
+    async function fetchRoadmapItems() {
+        try {
+            const response = await fetch('/api/roadmap'); // Adjust endpoint to match your backend
+            const data = await response.json();
+            renderRoadmapItems(data);
+        } catch (error) {
+            console.error("Failed to load roadmap items:", error);
+        }
+    }
+
+    function renderRoadmapItems(items) {
+        const container = document.getElementById('roadmap-container');
+        if (!container) return; // Prevents crash
+        container.innerHTML = ''; // Clear existing content
+
+        items.forEach(item => {
+            const statusColorMap = {
+                'Completed': 'bg-dfmGreen',
+                'In Progress': 'bg-yellow-500',
+                'Planned': 'bg-dfmBlue'
+            };
+
+            const statusBadge = item.status
+                ? `<span class="inline-block ${statusColorMap[item.status] || 'bg-gray-300'} text-white text-xs px-2 py-1 rounded mr-2">${item.status}</span>`
+                : '';
+
+            const itemHTML = `
+            <div class="roadmap-item relative pl-10">
+                <div class="absolute -left-3 top-0 w-6 h-6 rounded-full bg-dfmTeal border-4 border-white"></div>
+                <div class="bg-gray-100 p-6 rounded-lg shadow">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="text-xl font-bold text-dfmBlue">${item.title}</h3>
+                        <span class="bg-dfmBlue text-white text-sm px-3 py-1 rounded-full">${item.quarter}</span>
+                    </div>
+                    <p class="text-gray-700">${item.description}</p>
+                    <div class="mt-4">${statusBadge}</div>
+                </div>
+            </div>
+        `;
+
+            container.insertAdjacentHTML('beforeend', itemHTML);
+        });
+    }
+
+    addRoadmapBtn.addEventListener('click', () => {
+        if (!authToken) return login();
+        roadmapItemForm.reset();
+        document.getElementById('roadmap-submit-btn').textContent = 'Add Roadmap Item';
+        delete addRoadmapBtn.dataset.editing;
+        roadmapForm.classList.remove('hidden');
+        addRoadmapBtn.classList.add('hidden');
+    });
+
+    cancelRoadmap.addEventListener('click', () => {
+        roadmapForm.classList.add('hidden');
+        addRoadmapBtn.classList.remove('hidden');
+        showNotification('Roadmap form cancelled');
+    });
+
+    roadmapItemForm.addEventListener('submit', async e => {
+        e.preventDefault();
+        const title = document.getElementById('roadmap-title').value.trim();
+        const quarter = document.getElementById('roadmap-quarter').value.trim();
+        const description = document.getElementById('roadmap-description').value.trim();
+        const status = document.getElementById('roadmap-status').value;
+
+        if (!title || !quarter || !description) {
+            return showNotification('All fields except status are required', 'error');
+        }
+
+        const body = { title, quarter, description, status };
+        const editingId = addRoadmapBtn.dataset.editing;
+        const method = editingId ? 'PUT' : 'POST';
+        const url = editingId ? `/api/roadmap/${editingId}` : '/api/roadmap';
+
+        try {
+            const res = await fetch(url, {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${authToken}`
+                },
+                body: JSON.stringify(body)
+            });
+            const data = await res.json();
+            if (res.ok) {
+                roadmapForm.classList.add('hidden');
+                addRoadmapBtn.classList.remove('hidden');
+                roadmapItemForm.reset();
+                fetchRoadmapItems();
+                showNotification(editingId ? 'Roadmap updated!' : 'Roadmap item added!', 'success');
+            } else {
+                showNotification(data.error || 'Save failed', 'error');
+            }
+        } catch (err) {
+            showNotification('Network error', 'error');
+        }
+    });
+
     /** ------------------- Event Handlers ------------------- */
 
     // Delegated Click Events
@@ -249,6 +356,42 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    document.addEventListener('click', async e => {
+        const target = e.target;
+
+        if (target.matches('.delete-roadmap')) {
+            const id = target.dataset.id;
+            if (confirm('Delete this roadmap item?')) {
+                try {
+                    const res = await fetch(`/api/roadmap/${id}`, {
+                        method: 'DELETE',
+                        headers: { 'Authorization': `Bearer ${authToken}` }
+                    });
+                    if (res.ok) {
+                        fetchRoadmapItems();
+                        showNotification('Roadmap item deleted', 'success');
+                    } else {
+                        const err = await res.json();
+                        showNotification(err.error || 'Delete failed', 'error');
+                    }
+                } catch (err) {
+                    showNotification('Network error', 'error');
+                }
+            }
+        }
+
+        if (target.matches('.edit-roadmap')) {
+            addRoadmapBtn.dataset.editing = target.dataset.id;
+            document.getElementById('roadmap-title').value = decodeURIComponent(target.dataset.title);
+            document.getElementById('roadmap-quarter').value = decodeURIComponent(target.dataset.quarter);
+            document.getElementById('roadmap-description').value = decodeURIComponent(target.dataset.description);
+            document.getElementById('roadmap-status').value = target.dataset.status;
+            document.getElementById('roadmap-submit-btn').textContent = 'Update Roadmap Item';
+            addRoadmapBtn.classList.add('hidden');
+            roadmapForm.classList.remove('hidden');
+        }
+    });
+
     /** ------------------- Authentication ------------------- */
 
     const login = () => $('admin-login-box').classList.remove('hidden');
@@ -268,6 +411,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 $('admin-login-box').classList.add('hidden');
                 $('admin-login-label').textContent = '[Logout]';
                 addNewsBtn.classList.remove('hidden');
+                addRoadmapBtn.classList.remove('hidden');
                 showNotification('Login successful', 'success');
                 fetchNews();
             } else {
@@ -287,6 +431,7 @@ document.addEventListener('DOMContentLoaded', () => {
             authToken = '';
             label.textContent = '[Admin]';
             addNewsBtn.classList.add('hidden');
+            addRoadmapBtn.classList.add('hidden');
             showNotification('Logged out', 'success');
             fetchNews();
         } else {
@@ -304,4 +449,5 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /** ------------------- Initial Load ------------------- */
     fetchNews();
+    fetchRoadmapItems();
 });
