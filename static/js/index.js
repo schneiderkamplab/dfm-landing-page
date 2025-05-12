@@ -475,6 +475,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 authToken = data.token;
                 $('admin-login-box').classList.add('hidden');
                 $('admin-login-label').textContent = '[Logout]';
+                $('mobile-admin-login-label').textContent = '[Logout]';
                 addNewsBtn.classList.remove('hidden');
                 addRoadmapBtn.classList.remove('hidden');
                 showNotification('Login successful', 'success');
@@ -496,6 +497,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (label.textContent === '[Logout]') {
             authToken = '';
             label.textContent = '[Admin]';
+            $('mobile-admin-login-label').textContent = '[Admin]';
             addNewsBtn.classList.add('hidden');
             addRoadmapBtn.classList.add('hidden');
             showNotification('Logged out', 'success');
@@ -506,7 +508,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    $('mobile-admin-login-link').addEventListener('click', e => {
+        e.preventDefault();
+        $('admin-login-link').click(); // trigger the main logic
+    });
+
     $('admin-login-submit').addEventListener('click', handleLogin);
+
     $('admin-password').addEventListener('keydown', e => {
         if (e.key === 'Enter') {
             e.preventDefault();
