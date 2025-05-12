@@ -115,7 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const createNewsItem = news => {
         const div = document.createElement('div');
-        div.className = 'news-item bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg relative';
+        div.className = 'news-item bg-white/90 rounded-xl overflow-hidden shadow-md hover:shadow-lg relative';
         const sanitized = sanitizeHTML(news.content);
         const isLong = news.content.replace(/<[^>]*>/g, '').length > 140;
         const preview = isLong ? truncateHTML(sanitized, 140) : sanitized;
