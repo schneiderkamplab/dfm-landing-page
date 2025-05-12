@@ -100,7 +100,8 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const res = await fetch(API_URL);
             const data = await res.json();
-            renderNews(data.reverse());
+            data.sort((a, b) => new Date(b.date) - new Date(a.date));
+            renderNews(data);
         } catch (err) {
             console.error(err);
             showNotification('Failed to fetch news.', 'error');
