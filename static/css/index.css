@@ -229,9 +229,6 @@
   .inset-0 {
     inset: calc(var(--spacing) * 0);
   }
-  .top-0 {
-    top: calc(var(--spacing) * 0);
-  }
   .top-2 {
     top: calc(var(--spacing) * 2);
   }
@@ -252,9 +249,6 @@
   }
   .right-6 {
     right: calc(var(--spacing) * 6);
-  }
-  .-left-3 {
-    left: calc(var(--spacing) * -3);
   }
   .z-50 {
     z-index: 50;
@@ -397,6 +391,9 @@
   .items-center {
     align-items: center;
   }
+  .items-end {
+    align-items: flex-end;
+  }
   .items-start {
     align-items: flex-start;
   }
@@ -506,10 +503,6 @@
   .border-2 {
     border-style: var(--tw-border-style);
     border-width: 2px;
-  }
-  .border-4 {
-    border-style: var(--tw-border-style);
-    border-width: 4px;
   }
   .border-t {
     border-top-style: var(--tw-border-style);

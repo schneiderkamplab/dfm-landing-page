@@ -189,6 +189,29 @@ def delete_roadmap(roadmap_id):
     save_roadmap(updated_items)
     return jsonify({'success': True})
 
+@app.route('/api/roadmap/order', methods=['POST'])
+def reorder_roadmap():
+    auth = request.headers.get('Authorization', '')
+    token = auth.replace('Bearer ', '')
+    if not TOKENS.get(token) or datetime.now(UTC) > TOKENS[token]:
+        TOKENS.pop(token, None)
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    data = request.json
+    new_order = data.get('order', [])
+    if not isinstance(new_order, list):
+        return jsonify({'error': 'Invalid format'}), 400
+
+    current_items = load_roadmap()
+    id_map = {item['id']: item for item in current_items}
+    reordered = [id_map[i] for i in new_order if i in id_map]
+
+    # Keep unlisted items (optional)
+    extras = [item for item in current_items if item['id'] not in new_order]
+    save_roadmap(reordered + extras)
+
+    return jsonify({'success': True})
+
 @app.route('/api/login', methods=['POST'])
 def login():
     data = request.json

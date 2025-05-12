@@ -79,6 +79,21 @@ document.addEventListener('DOMContentLoaded', () => {
         return output.innerHTML;
     };
 
+    /** ------------------- Menu Logic ------------------- */
+
+    const mobileMenuBtn = document.getElementById('mobile-menu-button');
+    const mobileMenu = document.getElementById('mobile-menu');
+
+    mobileMenuBtn?.addEventListener('click', () => {
+        mobileMenu.classList.toggle('hidden');
+    });
+
+    document.querySelectorAll('#mobile-menu a').forEach(link => {
+        link.addEventListener('click', () => {
+            mobileMenu.classList.add('hidden');
+        });
+    });
+
     /** ------------------- News Logic ------------------- */
 
     const fetchNews = async () => {
@@ -191,6 +206,42 @@ document.addEventListener('DOMContentLoaded', () => {
 
             roadmapContainer.insertAdjacentHTML('beforeend', itemHTML);
         });
+        let roadmapSortable;
+        function initRoadmapDragAndDrop() {
+            if (roadmapSortable) roadmapSortable.destroy(); // Re-init safety
+            roadmapSortable = Sortable.create(document.getElementById('roadmap-container'), {
+                animation: 150,
+                handle: '.roadmap-item', // allow drag on the item itself
+                onEnd: saveRoadmapOrder
+            });
+        }
+        if (authToken) initRoadmapDragAndDrop();
+    }
+
+    async function saveRoadmapOrder() {
+        const items = Array.from(document.querySelectorAll('#roadmap-container .roadmap-item'));
+        const newOrder = items.map(el => el.querySelector('.edit-roadmap')?.dataset.id || el.querySelector('.delete-roadmap')?.dataset.id);
+
+        try {
+            const res = await fetch('/api/roadmap/order', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${authToken}`
+                },
+                body: JSON.stringify({ order: newOrder })
+            });
+
+            if (!res.ok) {
+                const err = await res.json();
+                showNotification(err.error || 'Failed to save order', 'error');
+            } else {
+                showNotification('Roadmap order saved', 'success');
+            }
+        } catch (err) {
+            console.error(err);
+            showNotification('Network error saving order', 'error');
+        }
     }
 
     addRoadmapBtn.addEventListener('click', () => {
