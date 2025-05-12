@@ -2,72 +2,11 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Danish Foundation Models</title>
-    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        dfmBlue: '#003366',
-                        dfmLightBlue: '#0066cc',
-                        dfmTeal: '#00a3a3',
-                        dfmGreen: '#00cc99',
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        .section {
-            scroll-margin-top: 100px;
-        }
-
-        .news-item {
-            transition: all 0.3s ease;
-        }
-
-        .news-item:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-        }
-
-        .roadmap-item::before {
-            content: '';
-            position: absolute;
-            left: -20px;
-            top: 0;
-            width: 2px;
-            height: 100%;
-            background: #00a3a3;
-        }
-
-        .roadmap-item:last-child::before {
-            height: 50%;
-        }
-
-        .nav-link {
-            position: relative;
-        }
-
-        .nav-link::after {
-            content: '';
-            position: absolute;
-            width: 0;
-            height: 2px;
-            bottom: -2px;
-            left: 0;
-            background-color: #00cc99;
-            transition: width 0.3s ease;
-        }
-
-        .nav-link:hover::after {
-            width: 100%;
-        }
-    </style>
+    <link rel="stylesheet" href="/index.css"/>
 </head>
 
 <body class="font-sans bg-gray-50 text-gray-800">
@@ -76,7 +15,6 @@
         <div class="container mx-auto px-6 py-3 flex justify-between items-center">
             <div class="flex items-center space-x-2">
                 <img src="/icon.png" alt="Logo" class="w-8 h-8">
-                <!-- <i class="fas fa-brain text-3xl text-dfmBlue"></i> -->
                 <span class="text-xl font-bold text-dfmBlue">Danish Foundation Models</span>
             </div>
             <div class="hidden md:flex space-x-8">
@@ -496,7 +434,7 @@
                                         <input type="checkbox" id="newsletter-consent" class="mt-1">
                                         <label for="newsletter-consent" class="text-sm text-gray-600">
                                             I consent to receiving emails and agree to the
-                                            <a href="/privacy-policy" target="_blank"
+                                            <a href="/privacy.html" target="_blank"
                                                 class="underline text-dfmTeal">privacy policy</a>.
                                         </label>
                                     </div>

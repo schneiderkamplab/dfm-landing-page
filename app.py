@@ -183,10 +183,6 @@ GDPR Consent: Yes
         return jsonify({'error': f'Failed to send email: {str(e)}'}), 500
     return jsonify({'success': True, 'message': 'Subscription successful with GDPR consent.'}), 200
 
-@app.route('/privacy-policy')
-def privacy_policy():
-    return send_from_directory(app.static_folder, 'privacy.html')
-
 @app.route('/')
 def index():
     return send_from_directory(app.static_folder, 'index.html')
