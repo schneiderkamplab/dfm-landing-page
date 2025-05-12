@@ -6,10 +6,10 @@ import os
 import uuid
 
 app = Flask(__name__, static_folder='static', static_url_path='')
-app.config['NEWS_FILE'] = os.getenv('NEWS_FILE', 'news.jsonl')
+app.config['NEWS_FILE'] = os.getenv('NEWS_FILE', 'data/news.jsonl')
 app.config['ADMIN_PASSWORD'] = os.getenv('ADMIN_PASSWORD', 'changeme')
-app.config['CONTACT_FILE'] = os.getenv('CONTACT_FILE', 'contact.jsonl')
-app.config['NEWSLETTER_FILE'] = os.getenv('NEWSLETTER_FILE', 'newsletter.jsonl')
+app.config['CONTACT_FILE'] = os.getenv('CONTACT_FILE', 'data/contact.jsonl')
+app.config['NEWSLETTER_FILE'] = os.getenv('NEWSLETTER_FILE', 'data/newsletter.jsonl')
 app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER', 'smtp.gmail.com')
 app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT', 587))
 app.config['MAIL_USE_TLS'] = True
