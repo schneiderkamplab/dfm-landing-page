@@ -27,7 +27,7 @@ else
 fi
 if [ -f "$OUTFILE" ]; then
   echo "INFO: Running Tailwind CSS CLI..."
-  ./tailwindcss --input ./index.css --output ./static/css/index.css --verbose
+  ./tailwindcss --input ./index.css --output ./static/css/index.css --verbose $@
 else
   echo "ERROR: Failed to obtain 'tailwindcss' CLI."
   exit 1
