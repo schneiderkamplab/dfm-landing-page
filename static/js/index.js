@@ -457,9 +457,9 @@ document.addEventListener('DOMContentLoaded', () => {
     /** ------------------- Authentication ------------------- */
 
     const login = () => {
-        $('admin-login-box').classList.remove('hidden');
+        $('admin-login-modal').classList.remove('hidden');
         setTimeout(() => $('admin-password').focus(), 0);
-    }
+    };
 
     const handleLogin = async () => {
         const password = $('admin-password').value.trim();
@@ -473,7 +473,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await res.json();
             if (res.ok) {
                 authToken = data.token;
-                $('admin-login-box').classList.add('hidden');
+                $('admin-login-modal').classList.add('hidden');
+                $('admin-password').value = '';
                 $('admin-login-label').textContent = '[Logout]';
                 $('mobile-admin-login-label').textContent = '[Logout]';
                 addNewsBtn.classList.remove('hidden');
@@ -522,7 +523,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    document.addEventListener('click', e => {
+        if (e.target.id === 'admin-login-modal') {
+            $('admin-login-modal').classList.add('hidden');
+        }
+    });
+
     /** ------------------- Initial Load ------------------- */
+
     fetchNews();
     fetchRoadmapItems();
+
 });
