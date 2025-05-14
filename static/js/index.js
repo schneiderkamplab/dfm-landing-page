@@ -530,6 +530,72 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    /** ------------------- Contact Form ------------------- */
+
+    document.getElementById('contact-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = document.getElementById('name').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const subject = document.getElementById('subject').value;
+        const message = document.getElementById('message').value.trim();
+        if (!name || !email || !subject || !message) {
+            showNotification('All fields are required.', 'error');
+            return;
+        }
+        try {
+            const res = await fetch('/api/contact', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, email, subject, message })
+            });
+            const result = await res.json();
+            if (res.ok) {
+                showNotification('Message sent successfully!', 'success');
+                e.target.reset();
+            } else {
+                showNotification('Error sending message: ' + result.error, 'error');
+            }
+        } catch (err) {
+            console.error(err);
+            showNotification('Network error. Please try again later.', 'error');
+        }
+    });
+
+    /** ------------------- Newsletter Form ------------------- */
+
+    document.getElementById('newsletter-submit').addEventListener('click', async () => {
+        const emailInput = document.getElementById('newsletter-email');
+        const consentCheckbox = document.getElementById('newsletter-consent');
+        const email = emailInput.value.trim();
+        const consent = consentCheckbox.checked;
+        if (!email) {
+            showNotification('Email is required.', 'error');
+            return;
+        }
+        if (!consent) {
+            showNotification('You must agree to the privacy policy.', 'error');
+            return;
+        }
+        try {
+            const res = await fetch('/api/newsletter', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, consent })
+            });
+            const result = await res.json();
+            if (res.ok) {
+                showNotification('Subscription successful!', 'success');
+                emailInput.value = '';
+                consentCheckbox.checked = false;
+            } else {
+                showNotification('Error subscribing: ' + result.error, 'error');
+            }
+        } catch (e) {
+            console.error(e);
+            showNotification('Network error. Please try again later.', 'error');
+        }
+    });
+
     /** ------------------- Initial Load ------------------- */
 
     fetchNews();
