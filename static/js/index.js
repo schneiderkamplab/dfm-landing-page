@@ -365,6 +365,9 @@ document.addEventListener('DOMContentLoaded', () => {
         $('news-submit-btn').textContent = 'Update News';
         addNewsBtn.classList.add('hidden');
         newsForm.classList.remove('hidden');
+        if (!isElementInViewport(newsForm)) {
+            newsForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
     };
 
     const toggleContent = btn => {
