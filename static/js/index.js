@@ -79,6 +79,16 @@ document.addEventListener('DOMContentLoaded', () => {
         return output.innerHTML;
     };
 
+    function isElementInViewport(el) {
+        const rect = el.getBoundingClientRect();
+        return (
+            rect.top >= 0 &&
+            rect.left >= 0 &&
+            rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+            rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+        );
+    }
+
     /** ------------------- Menu Logic ------------------- */
 
     const mobileMenuBtn = document.getElementById('mobile-menu-button');
@@ -452,6 +462,9 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('roadmap-submit-btn').textContent = 'Update Roadmap Item';
             addRoadmapBtn.classList.add('hidden');
             roadmapForm.classList.remove('hidden');
+            if (!isElementInViewport(roadmapForm)) {
+                roadmapForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
         }
     });
 
