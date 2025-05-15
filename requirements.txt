@@ -1,3 +1,4 @@
 flask
+flask-limiter
 flask-mail
 gunicorn

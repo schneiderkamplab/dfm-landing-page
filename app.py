@@ -1,5 +1,7 @@
 from datetime import UTC, datetime, timedelta
 from flask import Flask, request, jsonify, send_from_directory
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from flask_mail import Mail, Message
 import json
 import os
@@ -18,6 +20,7 @@ app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')  # Your email address
 app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')  # Your email password or app password
 app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_DEFAULT_SENDER', app.config['MAIL_USERNAME'])
 app.config['MAIL_RECIPIENT'] = os.getenv('MAIL_RECIPIENT', app.config['MAIL_USERNAME'])
+limiter = Limiter(app=app, key_func=get_remote_address)
 mail = Mail(app)
 
 TOKENS = {}
@@ -213,6 +216,7 @@ def reorder_roadmap():
     return jsonify({'success': True})
 
 @app.route('/api/login', methods=['POST'])
+@limiter.limit("5 per minute")
 def login():
     data = request.json
     password = data.get('password')
