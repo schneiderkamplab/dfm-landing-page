@@ -1,6 +1,10 @@
 document.addEventListener('DOMContentLoaded', () => {
     let authToken = '';
-    const API_URL = 'https://prod0.caracal.imada.sdu.dk/api/news';
+    const CONTACT_API = `${API}/contact`;
+    const LOGIN_API = `${API}/login`;
+    const NEWS_API = `${API}/news`;
+    const NEWSLETTER_API = `${API}/newsletter`;
+    const ROADMAP_API = `${API}/roadmap`;
 
     // Elements
     const $ = id => document.getElementById(id);
@@ -108,7 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const fetchNews = async () => {
         try {
-            const res = await fetch(API_URL);
+            const res = await fetch(NEWS_API);
             const data = await res.json();
             data.sort((a, b) => new Date(b.date) - new Date(a.date));
             renderNews(data);
@@ -166,7 +170,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function fetchRoadmapItems() {
         try {
-            const response = await fetch('https://prod0.caracal.imada.sdu.dk/api/roadmap'); // Adjust endpoint to match your backend
+            const response = await fetch(ROADMAP_API); // Adjust endpoint to match your backend
             const data = await response.json();
             renderRoadmapItems(data);
         } catch (error) {
@@ -234,7 +238,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const newOrder = items.map(el => el.querySelector('.edit-roadmap')?.dataset.id || el.querySelector('.delete-roadmap')?.dataset.id);
 
         try {
-            const res = await fetch('https://prod0.caracal.imada.sdu.dk/api/roadmap/order', {
+            const res = await fetch(`${ROADMAP_API}/order`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -284,7 +288,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const body = { title, quarter, description, status };
         const editingId = addRoadmapBtn.dataset.editing;
         const method = editingId ? 'PUT' : 'POST';
-        const url = editingId ? `https://prod0.caracal.imada.sdu.dk/api/roadmap/${editingId}` : 'https://prod0.caracal.imada.sdu.dk/api/roadmap';
+        const url = editingId ? `${ROADMAP_API}/${editingId}` : ROADMAP_API;
 
         try {
             const res = await fetch(url, {
@@ -338,7 +342,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const id = $('confirm-delete').dataset.id;
         if (!id) return;
         try {
-            const res = await fetch(`${API_URL}/${id}`, {
+            const res = await fetch(`${NEWS_API}/${id}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${authToken}` }
             });
@@ -405,7 +409,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!title || !date || !content) return showNotification('All fields required', 'error');
 
         const method = id ? 'PUT' : 'POST';
-        const url = id ? `${API_URL}/${id}` : API_URL;
+        const url = id ? `${NEWS_API}/${id}` : NEWS_API;
 
         try {
             const res = await fetch(url, {
@@ -439,7 +443,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const id = target.dataset.id;
             if (confirm('Delete this roadmap item?')) {
                 try {
-                    const res = await fetch(`https://prod0.caracal.imada.sdu.dk/api/roadmap/${id}`, {
+                    const res = await fetch(`${ROADMAP_API}/${id}`, {
                         method: 'DELETE',
                         headers: { 'Authorization': `Bearer ${authToken}` }
                     });
@@ -482,7 +486,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const password = $('admin-password').value.trim();
         if (!password) return;
         try {
-            const res = await fetch('https://prod0.caracal.imada.sdu.dk/api/login', {
+            const res = await fetch(LOGIN_API, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ password })
@@ -559,7 +563,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         try {
-            const res = await fetch('https://prod0.caracal.imada.sdu.dk/api/contact', {
+            const res = await fetch(CONTACT_API, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name, email, subject, message })
@@ -593,7 +597,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         try {
-            const res = await fetch('https://prod0.caracal.imada.sdu.dk/api/newsletter', {
+            const res = await fetch(NEWSLETTER_API, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, consent })
