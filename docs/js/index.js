@@ -1,5 +1,10 @@
 document.addEventListener('DOMContentLoaded', () => {
     let authToken = '';
+
+    // API Endpoints
+    if (API_VERSION !== 'v1') {
+        console.error(`API version mismatch. Expecting v1 but got '${API_VERSION}'. Cross fingers!`);
+    }
     const CONTACT_API = `${API}/contact`;
     const LOGIN_API = `${API}/login`;
     const NEWS_API = `${API}/news`;
