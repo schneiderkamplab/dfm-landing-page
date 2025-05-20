@@ -1,5 +1,6 @@
 from datetime import UTC, datetime, timedelta
 from flask import Flask, request, jsonify, send_from_directory
+from flask_cors import CORS
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_mail import Mail, Message
@@ -22,6 +23,7 @@ app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_DEFAULT_SENDER', app.config[
 app.config['MAIL_RECIPIENT'] = os.getenv('MAIL_RECIPIENT', app.config['MAIL_USERNAME'])
 limiter = Limiter(app=app, key_func=get_remote_address)
 mail = Mail(app)
+CORS(app)
 
 TOKENS = {}
 
