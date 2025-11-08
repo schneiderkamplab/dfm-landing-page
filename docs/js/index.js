@@ -41,6 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const sanitizeHTML = input => {
         const allowed = ['br', 'b', 'i', 'em', 'strong', 'a', 'ul', 'ol', 'li', 'p'];
+        const allowed_attrs = ['href', 'target', 'rel', 'class'];
         const template = document.createElement('template');
         template.innerHTML = input;
         const walker = document.createTreeWalker(template.content, NodeFilter.SHOW_ELEMENT, {
@@ -50,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let node;
         while (node = walker.nextNode()) {
             [...node.attributes].forEach(attr => {
-                if (node.nodeName.toLowerCase() === 'a' && attr.name === 'href') return;
+                if (node.nodeName.toLowerCase() === 'a' && allowed_attrs.includes(attr.name)) return;
                 node.removeAttribute(attr.name);
             });
         }
